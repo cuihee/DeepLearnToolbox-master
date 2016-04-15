@@ -6,22 +6,23 @@ function net = cnntrain(net, x, y, opts)
     end
     net.rL = [];
     for i = 1 : opts.numepochs
-        disp(['epoch ' num2str(i) '/' num2str(opts.numepochs)]);
-        tic;
+        time = tic;
         kk = randperm(m);
-        for l = 1 : numbatches
-            batch_x = x(:, :, kk((l - 1) * opts.batchsize + 1 : l * opts.batchsize));
-            batch_y = y(:,    kk((l - 1) * opts.batchsize + 1 : l * opts.batchsize));
-
+        for L = 1 : numbatches
+            temp = tic;
+            disp(['Epoch ' num2str(i) '/' num2str(opts.numepochs) ' batches ' num2str(L) '/' num2str(numbatches) '...']);
+            batch_x = x(:, :, kk((L - 1) * opts.batchsize + 1 : L * opts.batchsize));
+            batch_y = y(:,    kk((L - 1) * opts.batchsize + 1 : L * opts.batchsize));
             net = cnnff(net, batch_x);
             net = cnnbp(net, batch_y);
             net = cnnapplygrads(net, opts);
             if isempty(net.rL)
                 net.rL(1) = net.L;
             end
-            net.rL(end + 1) = 0.99 * net.rL(end) + 0.01 * net.L;
+            net.rL(end + 1) = 0.9 * net.rL(end) + 0.1 * net.L; % 还不清楚这个是什么，像卡尔曼
+            disp(['this batch ' num2str(toc(temp)) 's ' 'rL=' num2str(net.rL(end))]);
         end
-        toc;
+        disp(['                                  this Epoch ' num2str(toc(time)/60.) 'min']);
     end
     
 end

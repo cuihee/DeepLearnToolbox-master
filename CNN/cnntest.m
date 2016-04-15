@@ -1,4 +1,4 @@
-function [er, bad] = cnntest(net, x, y)
+function [er, bad, h, a] = cnntest(net, x, y)
     %  feedforward
     net = cnnff(net, x);
     [~, h] = max(net.o);
