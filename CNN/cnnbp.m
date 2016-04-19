@@ -1,10 +1,9 @@
 function net = cnnbp(net, y)
-    n = numel(net.layers);
-
+    n = numel(net.layers); %共有多少层
     %   error
-    net.e = net.o - y;
+    net.e = net.o - y; % net.o = sigm(net.ffW * net.fv + repmat(net.ffb, 1, size(net.fv, 2)));
     %  loss function
-    net.L = 1/2* sum(net.e(:) .^ 2) / size(net.e, 2);
+    net.L = 1/2* sum(net.e(:) .^ 2) / size(net.e, 2); %求导之后
 
     %%  backprop deltas
     net.od = net.e .* (net.o .* (1 - net.o));   %  output delta

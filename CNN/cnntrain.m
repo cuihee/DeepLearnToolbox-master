@@ -5,7 +5,10 @@ function net = cnntrain(net, x, y, opts)
         error('numbatches not integer');
     end
     net.rL = [];
-    for i = 1 : opts.numepochs
+    net.L = 998998; %初始 本次误差值 一个不可能的值
+    i = 1;
+    %训练超过指定次数或者误差小于指定误差，指定误差从 1/numbatches 到0是有意义的
+    while ~((i>opts.numepochs) || ((i>numbatches)&&(sum(net.rL(end-numbatches+1:end))/numbatches < opts.error_limit)))
         time = tic;
         kk = randperm(m);
         for L = 1 : numbatches
@@ -18,11 +21,12 @@ function net = cnntrain(net, x, y, opts)
             net = cnnapplygrads(net, opts);
             if isempty(net.rL)
                 net.rL(1) = net.L;
-            end
-            net.rL(end + 1) = 0.9 * net.rL(end) + 0.1 * net.L; % 还不清楚这个是什么，像卡尔曼
-            disp(['this batch ' num2str(toc(temp)) 's ' 'rL=' num2str(net.rL(end))]);
+            end            
+            net.rL(end + 1) = net.L;
+            disp(['this batch ' num2str(toc(temp)) 's']);
         end
-        disp(['                                  this Epoch ' num2str(toc(time)/60.) 'min']);
+        disp(['                                  this Epoch ' num2str(toc(time)/60.) 'min'  ' rL=' num2str(net.rL(end))]);
+        i = i+1;
     end
     
 end

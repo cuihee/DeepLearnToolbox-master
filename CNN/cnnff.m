@@ -21,8 +21,13 @@ function net = cnnff(net, x)
             inputmaps = net.layers{l}.outputmaps;
         elseif strcmp(net.layers{l}.type, 's')
             %%  这层是采样（池化）3 5 7
+            %根据相关理论，特征提取的误差主要来自两个方面：
+            %（1）邻域大小受限造成的估计值方差增大；
+            %（2）卷积层参数误差造成估计均值的偏移。
+            %一般来说，mean-pooling能减小第一种误差，更多的保留图像的背景信息，
+            %max-pooling能减小第二种误差，更多的保留纹理信息。
             for j = 1 : inputmaps
-                % 平均值池化
+                % 平均值池化 matlab的convn函数有加速
                 
                 z = convn(net.layers{l - 1}.a{j}, ones(net.layers{l}.scale) / (net.layers{l}.scale ^ 2), 'valid');
                 net.layers{l}.a{j} = z(1 : net.layers{l}.scale : end, 1 : net.layers{l}.scale : end, :);
@@ -43,9 +48,9 @@ function net = cnnff(net, x)
 
     %%  concatenate all end layer feature maps into vector
     net.fv = [];
-    for j = 1 : numel(net.layers{n}.a)
-        sa = size(net.layers{n}.a{j});
-        net.fv = [net.fv; reshape(net.layers{n}.a{j}, sa(1) * sa(2), sa(3))];
+    for j = 1 : numel(net.layers{n}.a) %最后一层卷积采样输出的多少个小方块
+        sa = size(net.layers{n}.a{j}); % 小方块的长宽厚
+        net.fv = [net.fv; reshape(net.layers{n}.a{j}, sa(1) * sa(2), sa(3))];% 小方块厚度展开，成一列，Z型拉起来
     end
     %%  feedforward into output perceptrons
     net.o = sigm(net.ffW * net.fv + repmat(net.ffb, 1, size(net.fv, 2)));
